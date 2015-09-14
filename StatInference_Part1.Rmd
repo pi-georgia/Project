@@ -2,7 +2,7 @@
 title: "StatInference_Project - Part A"
 author: "Georgia P"
 date: "September 12, 2015"
-output: html_document
+output: pdf_document
 ---
 
 #Overview 
@@ -108,11 +108,14 @@ abline(v=sd(d2), col="violet", lty=2, lwd= 1)
 abline(v=-sd(d2), col="violet", lty=2, lwd= 1)
 ```
 
-```{r echo=FALSE, message=FALSE}
-paste("Distribution mean= ", round(mean(d2),2), "tends to equal the mean of standard normal distrubution, which is 0")
 
-paste("Distribution St deviation= ", round(sd(d2),2), "tends to equal the St. Deviation of standard normal distrubution, which is 1")
-```
+Distribution mean 
+```{r echo=FALSE, message=FALSE}
+round(mean(d2),2)
+``` 
+tends to equal the mean of standard normal distrubution, which is 0
+
+Distribution St deviation ```{r echo=FALSE, message=FALSE}round(sd(d2),2) ``` tends to equal the St. Deviation of standard normal distrubution, which is 1
 
 
 
