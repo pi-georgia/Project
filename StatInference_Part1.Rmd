@@ -58,7 +58,7 @@ abline(v=mean, col= "red", lty=3, lwd= 3)
 In the following diagram, I will be demonstrating the distribution of the variances of the simulated exponentials vs the the theoretical variance, which only depends on the lambda. 
 Since lambda does not change,  the theoretical variance is also fixed = (1/lambda)^2 --> **Theoretical Variance = 25**
 
-```{r3 echo=TRUE}
+```{r3 hist, abline, echo=TRUE}
 #plot the distribution of sample variance
 hist(vns, main="Samples Variance Distribution & Theoretical Variance", xlab="samples variance", col= "thistle", border="gray60")
 
