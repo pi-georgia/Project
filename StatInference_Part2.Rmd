@@ -2,26 +2,43 @@
 title: "StatInference_Project - Part B"
 author: "Georgia P"
 date: "September 14, 2015"
-output: pdf_document
+output: html_document
 ---
 #Overview
 In this analysis the goal is analyze growth data for teeth (ToothGrowth Data) and explore statistical significance of evolution measured as **Tooth Length** (len variable) as well as the correlation with parameters such as **Supplement type** (VC or OJ) (supp variable) and **Dose in milligrams** (dose variable).
 
-#Exloratory analysis
-```{r qplot echo=TRUE, message=FALSE} 
-library(datasets) ; library(ggplot2)
+#Exploratory analysis
+```{r echo=TRUE, fig.height= 9, message=FALSE} 
+library(datasets) ; library(ggplot2) ; library(gridExtra)
 tdata<-ToothGrowth
 #basic summary of dataset
 summary(tdata)
 
-# plot densities
-qplot(data=tdata, x=len, color= supp,geom="density",  facets=. ~ dose, xlab = "length per dose category", main="Length density per dose and supplement types", labels="supplement type")
+# scatterplot/  primary visualization of my dataset
+sq<- qplot(data=tdata, y=len,x=dose, color= supp, xlab = "dose category", ylab="teeth length",main="Teeth lengths per dose and supplement types", labels="supplement type")
+
+# boxplot/ informative visualization of my variables statistics
+bq<- qplot(data=tdata, y=len, x= supp,fill=supp, facets=. ~ dose,geom="boxplot", xlab = "dose category",ylab="teeth length", main="Length boxplots per dose and supplement types", labels="supplement type")
+
+# plot variable distributions/ densities, better understand my variable characteristics
+dq<- qplot(data=tdata, x=len, color= supp,geom="density",  facets=. ~ dose, xlab = "length | dose category", main="Length density per dose and supplement types", labels="supplement type")
+
+#plot arranged
+grid.arrange(sq, bq,dq, nrow=3)
 
 ```
-Load the ToothGrowth data and perform some basic exploratory data analyses 
-Provide a basic summary of the data.
-Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering)
-State your conclusions and the assumptions needed for your conclusions. 
+
+# Statistical Inference 
+
+## Hypothesis
+Exploring the available data, I observe that lengths of teeth overlap among supplement types and dose categories. Therefore, because teeth length is an indicator that can only grow, not shrink back to original size for a second iteration (:)), I assume that there were at lease 6 **independent subject groups**, each one of them treated with one dose category (0.5mm /1mm/ 2mm) and one type of supplement (OJ / VJ).
+```{r fig.height= 4.5,echo=TRUE }
+#make classes and arrange
+library(dplyr)
+tdata2<- mutate(tdata, class=paste(supp, dose, "mm")) %>% group_by(class) %>% arrange(len)
+qplot(data=tdata2, y=len,color= class, xlab = "index", ylab="teeth length",main="Teeth lengths per class (dose & supplement types)")
+```
+
 
 Some criteria that you will be evaluated on
 Did you  perform an exploratory data analysis of at least a single plot or table highlighting basic features of the data?
