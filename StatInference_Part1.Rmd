@@ -45,7 +45,7 @@ d <- (ens - mns)*sqrt(n)/std
 In the following diagram, I will be demonstrating the distribution of the means of the simulated exponentials vs the the theoretical mean, which only depends on the lambda. 
 Since lambda does not change the theoretical mean is also fix = 1/lambda --> **Theoretical mean = 5**, 
 
-```{r2 echo=TRUE, message=FALSE}
+```{r2 echo=FALSE, message=FALSE}
 #plot the distribution of sample mean
 hist(mns, main="Samples Mean Distribution & Theoretical Mean", xlab="samples mean", col= "azure", border="gray60")
 
