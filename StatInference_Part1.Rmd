@@ -13,7 +13,7 @@ The **Central Limit Theorem** in brief describes that the distribution of the me
 I will create 1000 random exponential distributions of iid variables, all with rate lambda = 0.2 and # of samples n=40.
 For each one of these I will be calculating and saving their mean.
 
-```{r1 echo=TRUE}
+```{r1 echo=TRUE, message=FALSE}
  
 #Setting lambda = 0.2 for all of the simulations
 lambda <- 0.2
@@ -45,7 +45,7 @@ d <- (ens - mns)*sqrt(n)/std
 In the following diagram, I will be demonstrating the distribution of the means of the simulated exponentials vs the the theoretical mean, which only depends on the lambda. 
 Since lambda does not change the theoretical mean is also fix = 1/lambda --> **Theoretical mean = 5**, 
 
-```{r2 echo=TRUE}
+```{r2 echo=TRUE, message=FALSE}
 #plot the distribution of sample mean
 hist(mns, main="Samples Mean Distribution & Theoretical Mean", xlab="samples mean", col= "azure", border="gray60")
 
@@ -58,7 +58,7 @@ abline(v=mean, col= "red", lty=3, lwd= 3)
 In the following diagram, I will be demonstrating the distribution of the variances of the simulated exponentials vs the the theoretical variance, which only depends on the lambda. 
 Since lambda does not change,  the theoretical variance is also fixed = (1/lambda)^2 --> **Theoretical Variance = 25**
 
-```{r3 hist, abline, echo=TRUE}
+```{r3 fig.width=7, fig.height=6, echo=TRUE, message=FALSE}
 #plot the distribution of sample variance
 hist(vns, main="Samples Variance Distribution & Theoretical Variance", xlab="samples variance", col= "thistle", border="gray60")
 
@@ -68,7 +68,7 @@ abline(v=var, col= "blue", lty=3, lwd= 3)
 ````
 #Distribution
 Via figures and text, explain how one can tell the distribution is approximately normal.
-```{r4 echo=TRUE}
+```{r4 echo=TRUE, message=FALSE}
 hist(d, main="Distribution of means, normalized", col="wheat", border="wheat", breaks=1000)
 abline(v=mean(d), col="red", lwd= 3)
 abline(v=sd(d), col="violet", lty=2, lwd= 1)
@@ -77,13 +77,12 @@ abline(v=-sd(d), col="violet", lty=2, lwd= 1)
 paste("Distribution mean= ", round(mean(d),2), "tends to equal the mean of standard normal distrubution, which is 0")
 
 paste("Distribution St deviation= ", round(sd(d),2), "tends to equal the St. Deviation of standard normal distrubution, which is 1")
-
 ```
 
 As n= 40 is relatively small, I will rerun  my simulations with a larger n, to see whether this round will result in a better approximation of a standard normal distribution for the simulation means.
 
 
-```{r5 echo=TRUE}
+```{r5 echo=TRUE, message=FALSE}
 #set a larger n
 n2 <- 1500
 
