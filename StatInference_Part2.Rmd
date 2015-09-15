@@ -7,80 +7,82 @@ output: html_document
 #Executive Summary
 In this analysis the goal is analyze growth data for teeth (ToothGrowth Data) and explore statistical significance of evolution measured as **Tooth Length** (len variable) as well as the correlation with parameters such as **Supplement type** (VC or OJ) (supp variable) and **Dose in milligrams** (dose variable).
 The **questions** evaluated whether there was a dose or supplement type that yielded more growth in teeth length.  
-**Results** measured in this sample, highlight that there is no difference amongst dose or supplement types in terms of their efficiency to provide more teeth growth.
+**Results** measured in this sample, highlight that there is no difference amongst dose or supplement types in terms of their efficiency to provide more teeth growth. However, the *power* of the tests is limited (at best 10%) and a larger sample size is needed to conclude significance in such fine differences.
 
-#Exploratory analysis
-```{r echo=TRUE, fig.height= 9, message=FALSE} 
+##Exploratory analysis
+First I am going to visualize my data so as to understand their basic properties and make initial assumptions.  
+
+```{r echo=FALSE, fig.height=5,fig.width=12, message=FALSE, warning = FALSE} 
 library(datasets) ; library(ggplot2) ; library(gridExtra)
 tdata<-ToothGrowth
 #basic summary of dataset
 summary(tdata)
-
 # scatterplot/  primary visualization of my dataset
-sq<- qplot(data=tdata, y=len,x=dose, color= supp, xlab = "dose category", ylab="teeth length",main="Teeth lengths per dose and supplement types", labels="supplement type")
-
+sq<- qplot(data=tdata, y=len,x=dose, color= supp, xlab = "dose category", ylab="teeth length")
 # boxplot/ informative visualization of my variables statistics
-bq<- qplot(data=tdata, y=len, x= supp,fill=supp, facets=. ~ dose,geom="boxplot", xlab = "dose category",ylab="teeth length", main="Length boxplots per dose and supplement types", labels="supplement type")
-
+bq<- qplot(data=tdata, y=len, x= supp,fill=supp, facets=. ~ dose,geom="boxplot", xlab = "supplement |dose category",ylab="teeth length")
 # plot variable distributions/ densities, better understand my variable characteristics
-dq<- qplot(data=tdata, x=len, color= supp,geom="density",  facets=. ~ dose, xlab = "length | dose category", main="Length density per dose and supplement types", labels="supplement type")
-
-#plot arranged
-grid.arrange(sq, bq,dq, nrow=3)
-
+dq<- qplot(data=tdata, x=len, color= supp,geom="density",  facets=. ~ dose, xlab = "length | dose category")
+#arrange objects and then plot
+grid.arrange(sq, bq, dq, nrow=1, ncol= 3)
 ```
-
-# Statistical Inference 
-
-## Confidence Intervals & Hypothesis testing
-Exploring the available data, I observe that lengths of teeth overlap among supplement types and dose categories. Therefore, because teeth length is an indicator that can only grow, not shrink back to original size for a second iteration (:)), I assume that there were at lease 6 **independent subject groups**, each one of them treated with one dose category (0.5mm /1mm/ 2mm) and one type of supplement (OJ / VJ).
-```{r fig.height= 4.5,echo=TRUE, message=FALSE }
+  
+##Confidence Intervals & Hypothesis testing
+Exploring the available data, I observe that lengths of teeth overlap among supplement types and dose categories. Therefore, because teeth length is an indicator that can only grow, not shrink back to original size for a second iteration, I assume that there were at lease 6 **independent subject groups**, each one of them treated with one dose category (0.5mm /1mm/ 2mm) and one type of supplement (OJ / VJ).
+```{r fig.height= 3,echo=TRUE, message=FALSE }
 #make classes and arrange
 library(dplyr)
 tdata2<- mutate(tdata, class=paste(supp, dose, "mm")) %>% group_by(class) %>% arrange(len)
 qplot(data=tdata2, y=len,color= class, xlab = "index", ylab="teeth length",main="Teeth lengths per class (dose & supplement types)")
 ```
-Before I estimate the Confidence Intervals, and run the t-tests I shall calculate the growth at each class, by calculating the differences of length per class, between the largest and the smallest length, assuming these reflect the beggining and the end of the experiment.
+Before I estimate the **Confidence Intervals**, and run the t-tests I shall calculate the growth at each class, by calculating the differences of length per class, between the largest and the smallest length, assuming these reflect the beggining and the end of the experiment.
 
 ```{r echo=TRUE , message=FALSE }
 #create the table of differences within the same class. First value set to NA.
-library(data.table)
-df <- data.table(class=tdata2$class,len=tdata2$len)
+library(data.table) ; df <- data.table(class=tdata2$class,len=tdata2$len)
 df[,len_gain:=c(NA,diff(len)),by=class] ; df<-na.omit(df)
 df_class <- group_by(df, class) %>% summarize(gain= sum(len_gain), step_gain = mean(len_gain))
-
 #Confidence Interval for each 
 mn<- mean(df_class$gain) ; s<- sd(df_class$gain) ; n<- 6
-CI <- mn + c(-1, 1) * qt(.975, n-1) * s / sqrt(n)
 CI_conf <- t.test(df_class$gain)
-
 ```
-Now let's evaluate the question : **does the supplement type make a difference in the teeth growth?**
+So the confidence interval for length changes in this group is **`r CI_conf$conf`**.  
+
+### Hypothesis 1: Supplement makes a difference in teeth growth.  
+
+Now let's evaluate the question : **does the supplement type make a difference in the teeth's growth?**
 To do so I am assumming two data subsets one with the growth for supplement OJ and one for VC.
-My null Hypothesis is that they don't make a difference.
+My **null Hypothesis is that supplement type doesn't make a difference.**
 
 ```{r echo=TRUE , message=FALSE }
-
 x_OJ <- df$len_gain[1:27] ; y_VC <- df$len_gain[28:54]
 #running a t test
 t_eval <- t.test(x_OJ,y_VC, paired=FALSE)
-t_eval$statistic
+# How powerful is my test ? Estimate power
+delta0 = t_eval$estimate[1]- t_eval$estimate[2] ; sd0 <- sd(x_OJ-y_VC)
+power0 <- power.t.test(n=(length(x_OJ )+ length(y_VC))/2, delta=delta0, sd=sd0)$power 
 ```
-My T statistic is small, so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, *Supplement type does not make a difference in teeth length*.
+My T statistic is small (`r t_eval$statistic `), so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, *Supplement type does not make a difference in teeth length*.
+This statement is with **`r round(power0*100,2)`** % power. 
+```{r echo=TRUE, message=FALSE}
+n0 <- power.t.test(power=0.9, delta=delta0, sd=sd0)$n
+```
+To get a test with 90% power,  I need a sample with size = **`r round(n0,0)`**.  
 
+### Hypothesis 2: Dose makes a difference in teeth growth  
 Last, I will also evaluate the question **does the dose category make a difference in the teeth growth?**
-First I will re-arrange my data and then I will run my 2 t-tests, to evaluate whether
+First I will re-arrange my data and then I will run 3 t-tests, to evaluate :
 1. **Does a 0.5mm dose yield more teeth growth than 1mm dose?**  
 2. **Does a 1mm dose yield more teeth growth than 2mm dose?**  
 3. **Does a 2mm dose yield more teeth growth than 0.5mm dose?**  
 
-
-```{r echo=TRUE , message=FALSE }
+```{r echo=TRUE , fig.height=3, fig.width=4, message=FALSE }
 d_data<- group_by(tdata, dose) %>% arrange(dose) %>% arrange(len)
 sqd<- qplot(data=d_data, y=len,color=as.factor(dose), xlab = "sample index", ylab="teeth length",main="Teeth lengths colored per dose")
 sqd
 ```
-I re-affirm my observation that samples are not paired. Next I will calculate the teeth growth per dose category.
+  
+  I re-affirm my observation that samples are not paired. Next I will calculate the teeth growth per dose category.
 ```{r echo=TRUE , message=FALSE }
 dd <- data.table(dose=d_data$dose,len=d_data$len, supp=d_data$supp )
 dd[,len_gain:=c(NA,diff(len)),by=dose] ; dd<-na.omit(dd)
@@ -91,30 +93,39 @@ dd_dose <- group_by(dd, dose, supp) %>% summarize(gain= sum(len_gain), step_gain
 Because the summary table of total length growth contains only two observations per dose category , if summarized per supplement type, I will evaluate dose efficiency over a sample  set that contains more observations, thus I will evaluate the mean teeth growth gain per step across dose types.
 
 ```{r echo=TRUE , message=FALSE }
+#make subsets of length growth per dose category: d05, d1, d2
 d05 <- dd$len_gain[1:19] ; d1 <- dd$len_gain[20:38]; d2 <- dd$len_gain[39:57]
 ```
- **Does a 1mm dose yield more teeth growth than 0.5mm dose?**
-```{r echo=TRUE , message=FALSE }
-t_eval_1 <- t.test(d1,d05, paired=FALSE)
-t_eval_1$statistic
-```
- My T statistic is small, so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, ***Providing a dose of 0.5mm or 1mm does not make a difference in teeth length***.
 
- 
- **Does a 2mm dose yield more teeth growth than 1mm dose?**
+**Does a x dose yield more teeth growth than y dose?**
 ```{r echo=TRUE , message=FALSE }
+#Run T-tests for all dose category combinations, to see whether their mean difference is other than 0
+t_eval_1 <- t.test(d1,d05, paired=FALSE) 
 t_eval_2 <- t.test(d2, d1,paired=FALSE, var.equal=FALSE)
-t_eval_2$statistic
-```
- My T statistic is small, so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, ***Providing a dose of 1mm or 2mm does not make a difference in teeth length***.
- 
-**Does a 2mm dose yield more teeth growth than 0.5mm dose?**
-```{r echo=TRUE , message=FALSE }
 t_eval_3 <- t.test(d2,d05, paired=FALSE, var.equal=FALSE)
-t_eval_3$statistic
+tstattable <- c(t_eval_1$statistic, t_eval_2$statistic,t_eval_3$statistic)
+
+# How powerful are my tests ? Calculate power for all 3
+delta1 = t_eval_1$estimate[1]- t_eval_1$estimate[2] ; sd1 <- sd(d1-d05)
+delta2 = t_eval_2$estimate[1]- t_eval_2$estimate[2] ; sd2 <- sd(d2-d1)
+delta3 = t_eval_3$estimate[1]- t_eval_3$estimate[2] ; sd3 <- sd(d2-d05)
+
+power1 <- power.t.test(n=(length(d1)+ length(d05))/2, delta=delta1, sd=sd1)$power
+power2 <- power.t.test(n=(length(d2)+ length(d1))/2, delta=delta2, sd=sd2)$power
+power3 <- power.t.test(n=(length(d2)+ length(d05))/2, delta=delta3, sd=sd3)$power
+
+powertable = c(round(100*power1, 2), round(100*power2, 2), round(100*power3, 2))
 ```
- My T statistic is small, so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, ***Providing a dose of 2mm or 0.5mm does not make a difference in teeth length***. 
- 
- #Conclusions
- Neither supplement type nor dose category seems to yield more teeth growth in this sample.
- 
+ My T statistic is small for all 3 Tests (range : `r tstattable`), so as above I conclude that **providing a dose of 0.5mm or 1mm or 2mm does not make a noticeable difference in teeth length***.
+This statement is with **`r powertable ** % power.  
+```{r echo=TRUE, message=FALSE}
+n1 <- power.t.test(power=0.9, delta=delta1, sd=sd1)$n
+n2 <- power.t.test(power=0.9, delta=delta2, sd=sd2)$n
+n3 <- power.t.test(power=0.9, delta=delta3, sd=sd3)$n
+
+```
+To get a test with 90% power,  I need a sample with size = **`r round(n1,0)`** for the first test, **`r round(n2,0)`** for the second test and **`r round(n3,0)`** for the third test
+
+
+##Conclusions
+ Neither supplement type nor dose category seems to yield more teeth growth in this sample. However the power of this test is limited (5%-10%) as a result of a mix of limited sample size, small differences between results and relatively large st.deviation. 
