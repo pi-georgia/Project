@@ -2,7 +2,7 @@
 title: "StatInference_Project - Part B"
 author: "Georgia P"
 date: "September 14, 2015"
-output: html_document
+output: pdf_document
 ---
 #Executive Summary
 In this analysis the goal is analyze growth data for teeth (ToothGrowth Data) and explore statistical significance of evolution measured as **Tooth Length** (len variable) as well as the correlation with parameters such as **Supplement type** (VC or OJ) (supp variable) and **Dose in milligrams** (dose variable).
@@ -13,6 +13,7 @@ The **questions** evaluated whether there was a dose or supplement type that yie
 First I am going to visualize my data so as to understand their basic properties and make initial assumptions.  
 
 ```{r echo=FALSE, fig.height=5,fig.width=12, message=FALSE, warning = FALSE} 
+
 library(datasets) ; library(ggplot2) ; library(gridExtra)
 tdata<-ToothGrowth
 #basic summary of dataset
