@@ -4,8 +4,10 @@ author: "Georgia P"
 date: "September 14, 2015"
 output: html_document
 ---
-#Overview
+#Executive Summary
 In this analysis the goal is analyze growth data for teeth (ToothGrowth Data) and explore statistical significance of evolution measured as **Tooth Length** (len variable) as well as the correlation with parameters such as **Supplement type** (VC or OJ) (supp variable) and **Dose in milligrams** (dose variable).
+The **questions** evaluated whether there was a dose or supplement type that yielded more growth in teeth length.  
+**Results** measured in this sample, highlight that there is no difference amongst dose or supplement types in terms of their efficiency to provide more teeth growth.
 
 #Exploratory analysis
 ```{r echo=TRUE, fig.height= 9, message=FALSE} 
@@ -30,18 +32,89 @@ grid.arrange(sq, bq,dq, nrow=3)
 
 # Statistical Inference 
 
-## Hypothesis
+## Confidence Intervals & Hypothesis testing
 Exploring the available data, I observe that lengths of teeth overlap among supplement types and dose categories. Therefore, because teeth length is an indicator that can only grow, not shrink back to original size for a second iteration (:)), I assume that there were at lease 6 **independent subject groups**, each one of them treated with one dose category (0.5mm /1mm/ 2mm) and one type of supplement (OJ / VJ).
-```{r fig.height= 4.5,echo=TRUE }
+```{r fig.height= 4.5,echo=TRUE, message=FALSE }
 #make classes and arrange
 library(dplyr)
 tdata2<- mutate(tdata, class=paste(supp, dose, "mm")) %>% group_by(class) %>% arrange(len)
 qplot(data=tdata2, y=len,color= class, xlab = "index", ylab="teeth length",main="Teeth lengths per class (dose & supplement types)")
 ```
+Before I estimate the Confidence Intervals, and run the t-tests I shall calculate the growth at each class, by calculating the differences of length per class, between the largest and the smallest length, assuming these reflect the beggining and the end of the experiment.
+
+```{r echo=TRUE , message=FALSE }
+#create the table of differences within the same class. First value set to NA.
+library(data.table)
+df <- data.table(class=tdata2$class,len=tdata2$len)
+df[,len_gain:=c(NA,diff(len)),by=class] ; df<-na.omit(df)
+df_class <- group_by(df, class) %>% summarize(gain= sum(len_gain), step_gain = mean(len_gain))
+
+#Confidence Interval for each 
+mn<- mean(df_class$gain) ; s<- sd(df_class$gain) ; n<- 6
+CI <- mn + c(-1, 1) * qt(.975, n-1) * s / sqrt(n)
+CI_conf <- t.test(df_class$gain)
+
+```
+Now let's evaluate the question : **does the supplement type make a difference in the teeth growth?**
+To do so I am assumming two data subsets one with the growth for supplement OJ and one for VC.
+My null Hypothesis is that they don't make a difference.
+
+```{r echo=TRUE , message=FALSE }
+
+x_OJ <- df$len_gain[1:27] ; y_VC <- df$len_gain[28:54]
+#running a t test
+t_eval <- t.test(x_OJ,y_VC, paired=FALSE)
+t_eval$statistic
+```
+My T statistic is small, so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, *Supplement type does not make a difference in teeth length*.
+
+Last, I will also evaluate the question **does the dose category make a difference in the teeth growth?**
+First I will re-arrange my data and then I will run my 2 t-tests, to evaluate whether
+1. **Does a 0.5mm dose yield more teeth growth than 1mm dose?**  
+2. **Does a 1mm dose yield more teeth growth than 2mm dose?**  
+3. **Does a 2mm dose yield more teeth growth than 0.5mm dose?**  
 
 
-Some criteria that you will be evaluated on
-Did you  perform an exploratory data analysis of at least a single plot or table highlighting basic features of the data?
-Did the student perform some relevant confidence intervals and/or tests?
-Were the results of the tests and/or intervals interpreted in the context of the problem correctly? 
-Did the student describe the assumptions needed for their conclusions?
+```{r echo=TRUE , message=FALSE }
+d_data<- group_by(tdata, dose) %>% arrange(dose) %>% arrange(len)
+sqd<- qplot(data=d_data, y=len,color=as.factor(dose), xlab = "sample index", ylab="teeth length",main="Teeth lengths colored per dose")
+sqd
+```
+I re-affirm my observation that samples are not paired. Next I will calculate the teeth growth per dose category.
+```{r echo=TRUE , message=FALSE }
+dd <- data.table(dose=d_data$dose,len=d_data$len, supp=d_data$supp )
+dd[,len_gain:=c(NA,diff(len)),by=dose] ; dd<-na.omit(dd)
+
+#summary table with final total growth per dose and supplement, and average step gain per dose
+dd_dose <- group_by(dd, dose, supp) %>% summarize(gain= sum(len_gain), step_gain = mean(len_gain))
+```
+Because the summary table of total length growth contains only two observations per dose category , if summarized per supplement type, I will evaluate dose efficiency over a sample  set that contains more observations, thus I will evaluate the mean teeth growth gain per step across dose types.
+
+```{r echo=TRUE , message=FALSE }
+d05 <- dd$len_gain[1:19] ; d1 <- dd$len_gain[20:38]; d2 <- dd$len_gain[39:57]
+```
+ **Does a 1mm dose yield more teeth growth than 0.5mm dose?**
+```{r echo=TRUE , message=FALSE }
+t_eval_1 <- t.test(d1,d05, paired=FALSE)
+t_eval_1$statistic
+```
+ My T statistic is small, so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, ***Providing a dose of 0.5mm or 1mm does not make a difference in teeth length***.
+
+ 
+ **Does a 2mm dose yield more teeth growth than 1mm dose?**
+```{r echo=TRUE , message=FALSE }
+t_eval_2 <- t.test(d2, d1,paired=FALSE, var.equal=FALSE)
+t_eval_2$statistic
+```
+ My T statistic is small, so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, ***Providing a dose of 1mm or 2mm does not make a difference in teeth length***.
+ 
+**Does a 2mm dose yield more teeth growth than 0.5mm dose?**
+```{r echo=TRUE , message=FALSE }
+t_eval_3 <- t.test(d2,d05, paired=FALSE, var.equal=FALSE)
+t_eval_3$statistic
+```
+ My T statistic is small, so I fail to reject my null hypothesis, that true difference in means is zero.Otherwise said, ***Providing a dose of 2mm or 0.5mm does not make a difference in teeth length***. 
+ 
+ #Conclusions
+ Neither supplement type nor dose category seems to yield more teeth growth in this sample.
+ 
