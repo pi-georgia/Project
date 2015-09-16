@@ -6,74 +6,68 @@ output: pdf_document
 ---
 #Overview 
 In this project I will investigate the **exponential distribution** in R and compare it with the **Central Limit Theorem**.
-The **Central Limit Theorem** in brief describes that the distribution of the means of iid variables tends to be a standard normal distribution. >> (Estimate - Mean of Estimates)/ Std Error of means --> Normal 
-
+The **Central Limit Theorem** in brief describes that the distribution of the means of iid variables tends to be a standard normal distribution.
+**Conclusions**:  With a series of simulations of exponentials, and calculations of their means and st.deviations it is demonstrated that they present a normal distribution.
 ##Simulations 
-I will create 1000 random exponential distributions of iid variables, all with rate lambda = 0.2 and # of samples n=40. For each one of these I will be calculating and saving their mean.
+First, I will create 1000 random exponential distributions of iid variables, all with rate **lambda = 0.2** and # of samples n=40. For each one of these I will be calculating and saving their mean.
 ```{r echo=TRUE, message=FALSE}
 #Setting lambda = 0.2 for all of the simulations
 lambda <- 0.2
 #calculate the mean, the standard deviation and the variance of each exponential distribution
 mean<- 1/lambda ; std<- 1/lambda ; var= std^2 ; n<-40
-#running 1000 simulations of exponential distributions, all with lambda=0.2, n=40
-#for each one, I am calculating each mean (mean(rexp(n, lambda)) and saving it to a table "mns"
+#running 1000 simulations of exponential distributions, all with lambda=0.2, n=40 .For each one of these, I am calculating each mean (mean(rexp(n, lambda)) and saving it to a table "mns"
 ens<- NULL; sens<- NULL; mns<-NULL ; vns<- NULL
-for (i in 1 : 1000) 
-  {
-    #run simulation of exponential & add to the estimates table
-    dist<- rexp(n, lambda) ; ens<-c(ens, dist)
-    #mean  & varianceof n samples simulation calculated and stored in the relevant table, aka mns and vns
-    mns <- c(mns, mean(dist)); vns <- c(vns, sd(dist)^2 ) }
-# normalized distribution of means
-d <- (ens - mns)*sqrt(n)/std
+for (i in 1 : 1000) {
+#run simulation of exponential & add to the estimates table
+dist<- rexp(n, lambda) ; ens<-c(ens, dist)
+#means  & variances of 1000 simulated distributions, aka mns and vns
+mns <- c(mns, mean(dist)); vns <- c(vns, sd(dist)^2 ) }
+sample_mean <- mean(mns) ; sample_var<- mean(vns)
 ```
 ##Sample Mean versus Theoretical Mean 
 In the following diagram, I will be demonstrating the distribution of the means of the simulated exponentials vs the the theoretical mean, which only depends on the lambda. 
-Since lambda does not change the theoretical mean is also fix = 1/lambda --> **Theoretical mean = 5**
+As **lambda does not change across different distributions**, their **theoretical mean is also not changing** and equal to  1/lambda, therefore **Theoretical mean = 5**
 ```{r fig.height=3, echo=TRUE, message=FALSE}
 #plot the distribution of sample mean
-hist(mns, main="Samples Mean Distribution & Theoretical Mean", xlab="samples mean", col= "azure", border="gray60")
+hist(mns, breaks= 40, main="Samples Mean Distribution & Theoretical Mean", xlab="samples mean", col= "azure", border="gray60")
+#plot the sample mean in blue
+abline(v=sample_mean, col= "blue", lty=1, lwd= 3)
 #plot the theoretical mean, in red
 abline(v=mean, col= "red", lty=3, lwd= 3)
 ````
+  I observe that the samples' mean are distributed around the **sample mean `r sample_mean` ** (in blue) that is very close to the **theoretical mean `r mean` ** (in dotted red).  
 ##Sample Variance versus Theoretical Variance
 In the following diagram, I will be demonstrating the distribution of the variances of the simulated exponentials vs the the theoretical variance, which only depends on the lambda. 
-Since lambda does not change,  the theoretical variance is also fixed = (1/lambda)^2 --> **Theoretical Variance = 25**
+Since lambda does not change,  the **theoretical variance is also fixed = (1/lambda)^2,**  therefore  **Theoretical Variance = 25**
 ```{r  fig.height=3, echo=TRUE, message=FALSE}
-#plot the distribution of sample variance
-hist(vns, main="Samples Variance Distribution & Theoretical Variance", xlab="samples variance", col= "thistle", border="gray60")
-#plot the theoretical variance in blue
-abline(v=var, col= "blue", lty=3, lwd= 3)
-````
-#Distribution
-Via figures and text, explain how one can tell the distribution is approximately normal.
-```{r fig.height=4,echo=TRUE, message=FALSE}
-hist(d, main="Distribution of means, normalized", col="wheat", border="wheat", breaks=1000)
-abline(v=mean(d), col="red", lwd= 3) ; abline(v=sd(d), col="violet", lty=2, lwd= 1)
-abline(v=-sd(d), col="violet", lty=2, lwd= 1)
+#distribution of sample variance is plotted in a histogram
+hist(vns, breaks= 40,main="Samples Variance Distribution & Theoretical Variance", xlab="samples variance", col= "thistle", border="gray60")
+#the sample variance is added with a blue line
+abline(v=sample_var, col= "blue", lty=1, lwd= 3)
+#the theoretical variance is added with a red line
+abline(v=var, col= "red", lty=3, lwd= 3)
 ```
-Distribution **mean= `r round(mean(d),2)`** tends to equal the mean of standard normal distrubution, which is 0. 
-Distribution **st. deviation=  `r round(sd(d),2)` ** tends to equal the st. deviation of standard normal distrubution, which is 1.
-As n= 40 is relatively small, I will rerun  my simulations with a larger n, to see whether this round will result in a better approximation of a standard normal distribution for the simulation means.
-
-```{r fig.height=3, echo=TRUE, message=FALSE}
-#set a larger n
-n2 <- 1500
-#re-running 1000 simulations of exponential distributions, all with lambda=0.2, n=1500
-ens2<- NULL; sens2<- NULL; mns2<-NULL ; vns2<- NULL
-for (i in 1 : 1000) 
-  {
-    #run simulation of exponential & add to the estimates table
-    dist2<- rexp(n2, lambda) ; ens2<-c(ens2, dist2)
-    #mean & variance of n samples simulation calculated and stored in the relevant table, aka mns2 and vns2
-    mns2 <- c(mns2, mean(dist2)) ; vns2 <- c(vns2, sd(dist2)^2 ) }
-# normalized distribution of means
-d2 <- (ens2 - mns2)*sqrt(n2)/std
-#plot new distribution with larger n
-hist(d2, main="Distribution of means, n=1500, normalized", col="wheat3", border="wheat", breaks=1000)
-abline(v=mean(d2), col="red", lwd= 3); abline(v=sd(d2), col="violet", lty=2, lwd= 1) ; abline(v=-sd(d2), col="violet", lty=2, lwd= 1)
+   I observe that the samples' variances are distributed around the **sample mean variance `r sample_var` ** (in blue) that is very close to the **theoretical mean `r var` ** (in dotted red).
+   
+## Means Distribution 
+```{r fig.height=3,echo=TRUE, message=FALSE}
+dh<- hist(mns, main="Distribution of means of 40 exponentials", col="wheat", border="wheat", breaks=40, prob=TRUE, xlab="samples mean, 40 exponentials")
+abline(v=mean(mns), col="red", lwd= 3) ; abline(v=sd(mns), col="violet", lty=2, lwd= 1)
+abline(v=-sd(mns), col="violet", lty=2, lwd= 1)
+#add the histogram linear envelope
+lines (density(mns), col="red")
 ```
-The **distribution mean  `r round(mean(d2),2)`** tends to equal the mean of standard normal distrubution, which is 0
-The **distribution St deviation `r round(sd(d2),2) ` ** tends to equal the St. Deviation of standard normal distrubution, which is 1
+I observe that the **samples'mean= `r round(sample_mean,2)`** is distributed at a Gaussian form that is very close to normal. Fitting a red line, helps me better visualize that.
+Then I will create a collection of **500 exponential distributions, with random exponentials**. Same as before I will collect their means and eval their distribution, to see whether it also tends to be a normal
+``` {r echo=TRUE, message=FALSE , warning=FALSE, fig.height=3.5}
+rens<- NULL; rsens<- NULL; rmns<-NULL ; rvns<- NULL
+#generate random number of exponentials
+n_rdm<- sample(30:1000, 500)
+for (i in 1 : 500){
+rdist<- rexp(n_rdm[i], lambda) ; rens<-c(rens, rdist)
+rmns <- c(rmns, mean(rdist)); rvns <- c(rvns, sd(rdist)^2 ) }
+rdh<- hist(rmns, main="Distribution of means of random exponentials", col="azure",xlab="samples mean, random exponentials", border="azure", breaks=40, prob=TRUE)
+lines (density(rmns), col="red")
+```
 
-
+Same as above the distribution of means of random exponentials tends to a normal distribution as demonstrated by the red line.

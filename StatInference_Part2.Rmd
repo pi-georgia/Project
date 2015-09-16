@@ -3,6 +3,7 @@ title: "StatInference_Project - Part B"
 author: "Georgia P"
 date: "September 14, 2015"
 output: pdf_document
+template: tufte_handout
 ---
 #Executive Summary
 In this analysis the goal is analyze growth data for teeth (ToothGrowth Data) and explore statistical significance of evolution measured as **Tooth Length** (len variable) as well as the correlation with parameters such as **Supplement type** (VC or OJ) (supp variable) and **Dose in milligrams** (dose variable).
